@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0a5bd543-60f2-4808-a315-d47ea6e33299" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="demoupdatefunctionFlow" doc:id="928aeeb2-738a-451e-bf1d-96e053e0cf38" >
+		<http:listener doc:name="Listener" doc:id="d623a3f0-d73b-4d09-ac0e-9b58abefc82d" config-ref="HTTP_Listener_config" path="/demoupdate"/>
+		<set-payload value='#[[
+{
+	"EmpName": "John",
+	"Age": "32",
+	"ServiceDetails":{
+		"Designation": "Clerk",
+		"DOJ": "Sept 20 1998"
+	}
+},
+{
+	"EmpName": "Kelvin",
+	"Age": "33",
+	"ServiceDetails":{
+		"Designation": "Accountant",
+		"DOJ": "Sept 20 2015"
+	}
+}
+]]' doc:name="Set Payload" doc:id="598e90f3-f10f-4e53-97a3-c5a37220e385" />
+		<ee:transform doc:name="Transform Message" doc:id="ef822253-6b70-4c5a-aae7-2a484a5a40b4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::util::Values
+output application/json
+---
+//payload.ServiceDetails update  "Designation" with "Teacher"
+payload map ((item) ->
+    item.ServiceDetails update {
+        case Designation at .Designation if (Designation == "Clerk") ->  "Assistant Manager"
+
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
